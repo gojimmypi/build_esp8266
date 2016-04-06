@@ -2,38 +2,116 @@
 #*********************************************************************************************
 # ESP8266 MicroPython Firmware Build on RPi, by gojimmypi
 #
-#  version 0.01 (coming to github soon)
+#  version 0.02 (coming to github soon)
 #
 #  GNU GENERAL PUBLIC LICENSE
 #
 # NOTE: you will need a lot of free disk space. This will likely not work on an 8GB RPi SD.
 #
+#
+#*******************************************************************************************************
 # For new RPi install, on a windows machine:
 #
 # download latest raspian
 # https://downloads.raspberrypi.org/raspbian_latest
 #
 # for info see https://www.raspberrypi.org/downloads/raspbian/
+#*******************************************************************************************************
+# For windows client (used to write Pi image to new RPi)
 #
 # download win32diskimager
 # https://sourceforge.net/projects/win32diskimager/files/Archive/Win32DiskImager-0.9.5-install.exe/download
 #
 # for info see https://sourceforge.net/projects/win32diskimager/
+#*******************************************************************************************************
+#
+# See http://forum.micropython.org/viewtopic.php?f=16&t=1655    Portion reprinted here:
+#
+# Building the SDK
+#
+# Read all about setting up your ESP SDK directly on pfalcon/esp-open-sdk. The SDK gets updated every
+# now and then, watch out for the crucial and major updates. See the Troubleshooting post section if
+# you hit any issues.
+#
+# See README.md at  https://github.com/pfalcon/esp-open-sdk
+#
+# Building the Firmware
+#
+# For the latest instructions on how to build and upload your existing firmware see micropython/esp8266.
+# The developers are working hard to get the existing alpha work merged into the main project. Do not
+# be surprised if you see people talking about features that seemingly do not exist in the current
+# repository, rest assured, they are on the way. The latest master branch changes fast, if you're
+# interested in a stable version of micropython, please use one of the release tags.
+#
+# Flashing the Firmware
+#
+# It is important to note, if you are using a non-official ESP breakout board and using a form of USB
+# to Serial adapter to flash your chip, you should be careful about how you're powering your module as
+# this has caused problems for new users before. Please see "How to correctly power my module up?"
+# section of the "Technical FAQ".
 #
 
+#*******************************************************************************************************
+# startup: show help as needed
+#*******************************************************************************************************
+if [ "$1" == "" ] ||  [ "$1" == "HELP" ]; then
+  echo "Usage:"
+  echo "build_esp8266 [OPTION]"
+  echo ""
+  echo "OPTIONS"
+  echo ""
+  echo "  HELP"
+  echo "    show this help. Source will be placed in ~/workspace/ directory."
+  echo ""
+  echo "  FULL"
+  echo "    Update RPi, download latest esp-open-sdk and micropython, build everything, erase and upload new binary to /dev/ttyUSB0"
+  echo ""
+  echo "  MAKE-ONLY-ESP8266"
+  echo "     Update RPi, download latest micropython and build (skip esp-open-sdk)."
+  echo ""
+  echo "  MAKE-ONLY"
+  echo "     Update RPi, download latest esp-open-sdk and micropython, build everything."
+  echo ""
+  exit 0
+fi
+
+if [ "$1" != "FULL" ] && [ "$1" != "MAKE-ONLY" ] &&  [ "$1" != "MAKE-ONLY-ESP8266" ]; then
+  echo "$1  not a valid option. try ./build_esp8266.sh HELP "
+  exit 0
+fi
+
+#*******************************************************************************************************
+# ensure we are not running as root
+#*******************************************************************************************************
+ls /root > nul:
+EXIT_STAT=$?
+if [ $EXIT_STAT -ne 0 ];then
+  echo "Confirmed we are not running as root."
+else
+  echo "Aborted. Do not run with sudo (compile errors will occur)."
+  exit 2
+fi
+
+
+
+echo "*************************************************************************************************"
+echo "*************************************************************************************************"
+echo "  Update Raspberry Pi and install dependencies as needed "
+echo "*************************************************************************************************"
+echo "*************************************************************************************************"
 
 #*******************************************************************************************************
 #
 #*******************************************************************************************************
 # update RPi firmware
-sudo rpi-update
+sudo rpi-update --assume-yes
 
 # standard update
-sudo apt-get update && time sudo apt-get dist-upgrade
+sudo apt-get update --assume-yes && time sudo apt-get dist-upgrade --assume-yes
 
 # git should be installed, but let's just be sure
 
-sudo apt-get install git
+sudo apt-get install git --assume-yes
 
 # completely optional, but I like to have xrdp (so that I can use Windows remote desktop)
 # sudo apt-get install xrdp
@@ -58,17 +136,17 @@ sudo apt-get install git
 #
 
 
-# every linux user should know how to use VI / VIM, right?
+# every linux user should know how to use VI / VIM, right? (optional)
 # sudo apt-get install vim
 
 # I also like to have the optional dns tools installed (optional)
 # sudo apt-get install dnsutils
 
 # this is the big ESP8266 requirement install from pfalcon (slightly modified)
-sudo apt-get install make autoconf automake libtool gcc g++ gperf flex bison texinfo gawk ncurses-dev libexpat-dev python python-serial sed git unzip bash
+sudo apt-get install make autoconf automake libtool gcc g++ gperf flex bison texinfo gawk ncurses-dev libexpat-dev python python-serial sed git unzip bash --assume-yes
 
 # listed as "maybe" but was required for me on raspian jessie
-sudo apt-get install libtool-bin
+sudo apt-get install libtool-bin --assume-yes
 
 # unrar install gave an error this error, so pulled out into separate install
 # even with the error, sees to work ok
@@ -76,6 +154,7 @@ sudo apt-get install libtool-bin
 # Package unrar is not available, but is referred to by another package.
 # This may mean that the package is missing, has been obsoleted, or
 # is only available from another source
+echo "It seems that the missing unrar can be ingored, but included here anyhow... (is it really needed? ignore the error)"
 sudo apt-get install unrar
 
 
@@ -89,22 +168,44 @@ if ! [[ -a ~/workspace ]]; then
 fi
 
 
+if [ "$1" != "MAKE-ONLY-ESP8266" ]; then
+  #*******************************************************************************************************
+  # next git the pfalcon esp-open-sdk
+  # (I believe pfalcon warning that the esp=open-sdk need to be rebuilt fresh every time!)
+  #*******************************************************************************************************
+  cd ~/workspace
+  if ! [[ -a ~/workspace/esp-open-sdk ]]; then
+    echo git esp-open-sdk
+    git clone --recursive https://github.com/pfalcon/esp-open-sdk.git
+  fi
 
-#*******************************************************************************************************
-# next git the pfalcon esp-open-sdk
-# (I believe pfalcon warning that the esp=open-sdk need to be rebuilt fresh every time!)
-#*******************************************************************************************************
-cd ~/workspace
-if ! [[ -a ~/workspace/esp-open-sdk ]]; then
-  echo git esp-open-sdk
-  git clone --recursive https://github.com/pfalcon/esp-open-sdk.git
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
+  echo "*  Update latest esp-open-sdk from git "
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
+  cd ~/workspace/esp-open-sdk
+
+  make clean
+
+  git submodule update --init
+  git fetch origin
+
+  # the next git commmands are suggested on https://github.com/pfalcon/esp-open-sdk
+  git pull
+  git submodule sync
+  git submodule update
+
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
+  echo "*  make esp-open-sdk (highly recommended, but takes a long time to build) "
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
+  # TODO - determine if git fetched anything new, if not, no need to rebuild!
+  # compile esp-open-sdk (this takes a ridiculously long time)
+  make
 fi
 
-cd ~/workspace/esp-open-sdk
-git submodule update --init
-
-# compile esp-open-sdk (this takes a ridiculously long time)
-make
 
 # should evenually get a message like this at the end. (note important path note!)
 #
@@ -123,14 +224,35 @@ export PATH=/home/pi/workspace/esp-open-sdk/xtensa-lx106-elf/bin:$PATH
 #*******************************************************************************************************
 cd ~/workspace
 
+make clean
+
 if ! [[ -a ~/workspace/micropython ]]; then
   echo git micropython
   git clone --recursive https://github.com/micropython/micropython.git
 fi
 
+echo "*************************************************************************************************"
+echo "*************************************************************************************************"
+echo "*  Update latest micropython from git "
+echo "*************************************************************************************************"
+echo "*************************************************************************************************"
 cd ~/workspace/micropython/
 git submodule update --init
 
+git fetch origin
+git pull
+
+# the next git commmands are suggested on https://github.com/pfalcon/esp-open-sdk
+git pull
+git submodule sync
+git submodule update
+
+
+echo "*************************************************************************************************"
+echo "*************************************************************************************************"
+echo "*  Build ESP8266"
+echo "*************************************************************************************************"
+echo "*************************************************************************************************"
 make
 
 cd ~/workspace/micropython/esp8266
@@ -138,31 +260,65 @@ cd ~/workspace/micropython/esp8266
 #*******************************************************************************************************
 # show the newly built firmware
 #*******************************************************************************************************
-ls ~/workspace/micropython/esp8266/build/firmware* -al
+echo "*************************************************************************************************"
+echo "*************************************************************************************************"
+echo "*  Newly built firmware in  ~/workspace/micropython/esp8266/build /"
+echo "*************************************************************************************************"
+echo "*************************************************************************************************"
 
+if  ([ -e  "~/workspace/micropython/esp8266/build/firmware-combined.bin" ]); then
+  ls ~/workspace/micropython/esp8266/build/firmware* -al
+else
+  echo "ERROR: Fresh build file not found.  ~/workspace/micropython/esp8266/build/firmware-combined.bin"
+  echo "Aborting..."
+  exit 2
+fi 
 
 #*******************************************************************************************************
 # git the esptool
 #*******************************************************************************************************
+echo "*************************************************************************************************"
+echo "*************************************************************************************************"
+echo "*  Get latest esptool "
+echo "*************************************************************************************************"
+echo "*************************************************************************************************"
 cd ~/workspace
 if ! [[ -a ~/workspace/esptool ]]; then
   echo git esptool
   git clone https://github.com/themadinventor/esptool/
 fi
 
+cd ~/workspace/esptool/
+# TODO - are these git commands really all needed for updates? 
+git submodule update --init
+
+git fetch origin
+git pull
+
+# the next git commmands are suggested on https://github.com/pfalcon/esp-open-sdk
+git pull
+git submodule sync
+git submodule update
+
 chmod +x ~/workspace/esptool/esptool.py
 
 #*******************************************************************************************************
-# # uncomment if you want to erase the flash (a good idea before applying new firmware)
+# erase the flash (a good idea before applying new firmware)
 #*******************************************************************************************************
-# ~/workspace/esptool/esptool.py --port /dev/ttyUSB0 erase_flash
+echo "*************************************************************************************************"
+echo "*  Erasing..."
+echo "*************************************************************************************************"
+~/workspace/esptool/esptool.py --port /dev/ttyUSB0 erase_flash
 
-
 #*******************************************************************************************************
-# uncomment send newly compiled image to your ESP8266
+# send newly compiled image to your ESP8266
 #*******************************************************************************************************
-#~/workspace/esptool/esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=8m 0 \
+echo "*************************************************************************************************"
+echo "*  Writing image..."
+echo "*************************************************************************************************"
+~/workspace/esptool/esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=8m 0 \
                                       ~/workspace/micropython/esp8266/build/firmware-combined.bin
+
 #
 # successful write should look like this:
 #
@@ -231,11 +387,16 @@ chmod +x ~/workspace/esptool/esptool.py
 # python pyboard.py --device /dev/ttyUSB0 myI2C.py
 
 # uncomment if you want to quickly see if the ESP8266 is operational
-# python pyboard.py --device /dev/ttyUSB0 -c 'print("hello world")'
+python pyboard.py --device /dev/ttyUSB0 -c 'print("hello world")'
 
 # uncomment if you con't want to use minicom but need to open a terminal session to ESP8266
 # sudo screen /dev/ttyUSB0 115200
 # reminder:
+#
 # Ctrl-A Ctrl-D to detach, then connect later with screen -r   (holds the serial port in use!)
 # per deshipu: To exit screen, use "ctrl+a ctrl+k" or "ctrl+a ctrl+K" (the latter if you don't want a confirmation question).
+
+echo "Done!"
+
+
 
