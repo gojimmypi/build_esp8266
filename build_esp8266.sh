@@ -188,7 +188,7 @@ if [ "$1" != "MAKE-ONLY-ESP8266" ]; then
   echo "*************************************************************************************************"
   cd ~/workspace/esp-open-sdk
 
-#  make clean
+  make clean
 
   git submodule update --init
   git fetch origin
@@ -205,8 +205,7 @@ if [ "$1" != "MAKE-ONLY-ESP8266" ]; then
   echo "*************************************************************************************************"
   # TODO - determine if git fetched anything new, if not, no need to rebuild!
   # compile esp-open-sdk (this takes a ridiculously long time)
-  read -n 1  -p  "Make would happen here..."
-#  make
+  make
 fi
 
 
@@ -257,10 +256,9 @@ echo "**************************************************************************
 echo "*************************************************************************************************"
 cd ~/workspace/micropython/esp8266
 
-  read -n 1  -p  "Make would happen here..."
-#make clean
+make clean
 
-#make
+make
 
 
 #*******************************************************************************************************
