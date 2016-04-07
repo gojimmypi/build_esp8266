@@ -2,7 +2,7 @@
 #*********************************************************************************************
 # ESP8266 MicroPython Firmware Build on RPi, by gojimmypi
 #
-#  version 0.02 (coming to github soon)
+#  version 0.03
 #
 #  GNU GENERAL PUBLIC LICENSE
 #
@@ -50,6 +50,7 @@
 # this has caused problems for new users before. Please see "How to correctly power my module up?"
 # section of the "Technical FAQ".
 #
+MYDEVICE="/dev/ttyUSB0"
 
 #*******************************************************************************************************
 # startup: show help as needed
@@ -64,13 +65,13 @@ if [ "$1" == "" ] ||  [ "$1" == "HELP" ]; then
   echo "    show this help. Source will be placed in ~/workspace/ directory."
   echo ""
   echo "  FULL"
-  echo "    Update RPi, download latest esp-open-sdk and micropython, build everything, erase and upload new binary to /dev/ttyUSB0"
-  echo ""
-  echo "  MAKE-ONLY-ESP8266"
-  echo "     Update RPi, download latest micropython and build (skip esp-open-sdk)."
+  echo "     Update RPi, download latest esp-open-sdk and micropython, build everything, erase and upload new binary to $MYDEVICE"
   echo ""
   echo "  MAKE-ONLY"
-  echo "     Update RPi, download latest esp-open-sdk and micropython, build everything."
+  echo "     Download latest esp-open-sdk and micropython, build everything."
+  echo ""
+  echo "  MAKE-ONLY-ESP8266"
+  echo "     Download latest micropython and build (skip esp-open-sdk)."
   echo ""
   exit 0
 fi
@@ -82,8 +83,9 @@ fi
 
 #*******************************************************************************************************
 # ensure we are not running as root
+#  (try to peek in /root directory, assume non-root user does not have access)
 #*******************************************************************************************************
-ls /root > nul:
+ls /root > /dev/null 2>/dev/null
 EXIT_STAT=$?
 if [ $EXIT_STAT -ne 0 ];then
   echo "Confirmed we are not running as root."
@@ -93,85 +95,85 @@ else
 fi
 
 
+if [ "$1" == "FULL" ]; then
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
+  echo "  Update Raspberry Pi and install dependencies as needed "
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
 
-echo "*************************************************************************************************"
-echo "*************************************************************************************************"
-echo "  Update Raspberry Pi and install dependencies as needed "
-echo "*************************************************************************************************"
-echo "*************************************************************************************************"
+  #*******************************************************************************************************
+  #
+  #*******************************************************************************************************
+  # update RPi firmware
+  sudo rpi-update --assume-yes
 
-#*******************************************************************************************************
-#
-#*******************************************************************************************************
-# update RPi firmware
-sudo rpi-update --assume-yes
+  # standard update
+  sudo apt-get update --assume-yes && time sudo apt-get dist-upgrade --assume-yes
 
-# standard update
-sudo apt-get update --assume-yes && time sudo apt-get dist-upgrade --assume-yes
+  # git should be installed, but let's just be sure
 
-# git should be installed, but let's just be sure
+  sudo apt-get install git --assume-yes
 
-sudo apt-get install git --assume-yes
+  # completely optional, but I like to have xrdp (so that I can use Windows remote desktop)
+  # sudo apt-get install xrdp
 
-# completely optional, but I like to have xrdp (so that I can use Windows remote desktop)
-# sudo apt-get install xrdp
+  # also optional is samba, so that I can mount the RPi as a Windows share
+  # can be very handy for getting files onto & off of RPi
+  # sudo apt-get install samba samba-common-bin
+  # sudo smbpasswd -a pi
+  # sudo smbpasswd -a root
 
-# also optional is samba, so that I can mount the RPi as a Windows share
-# can be very handy for getting files onto & off of RPi
-# sudo apt-get install samba samba-common-bin
-# sudo smbpasswd -a pi
-# sudo smbpasswd -a root
-
-## edit the file /etc/samba/smb.conf and put in these lines at the end (without single # comment markers!)
-##*******************************************************************************************************
-# [home]
-#   comment= root
-#   path=/home/pi
-#   browseable=Yes
-#   writeable=Yes
-#   only guest=no
-#   create mask=0777
-#   directory mask=0777
-#   public=no
-#
+  ## edit the file /etc/samba/smb.conf and put in these lines at the end (without single # comment markers!)
+  ##*******************************************************************************************************
+  # [home]
+  #   comment= root
+  #   path=/home/pi
+  #   browseable=Yes
+  #   writeable=Yes
+  #   only guest=no
+  #   create mask=0777
+  #   directory mask=0777
+  #   public=no
+  #
 
 
-# every linux user should know how to use VI / VIM, right? (optional)
-# sudo apt-get install vim
+  # every linux user should know how to use VI / VIM, right? (optional)
+  # sudo apt-get install vim
 
-# I also like to have the optional dns tools installed (optional)
-# sudo apt-get install dnsutils
+  # I also like to have the optional dns tools installed (optional)
+  # sudo apt-get install dnsutils
 
-# this is the big ESP8266 requirement install from pfalcon (slightly modified)
-sudo apt-get install make autoconf automake libtool gcc g++ gperf flex bison texinfo gawk ncurses-dev libexpat-dev python python-serial sed git unzip bash --assume-yes
+  # this is the big ESP8266 requirement install from pfalcon (slightly modified)
+  sudo apt-get install make autoconf automake libtool gcc g++ gperf flex bison texinfo gawk ncurses-dev libexpat-dev python python-serial sed git unzip bash --assume-yes
 
-# listed as "maybe" but was required for me on raspian jessie
-sudo apt-get install libtool-bin --assume-yes
+  # listed as "maybe" but was required for me on raspian jessie
+  sudo apt-get install libtool-bin --assume-yes
 
-# unrar install gave an error this error, so pulled out into separate install
-# even with the error, sees to work ok
-#
-# Package unrar is not available, but is referred to by another package.
-# This may mean that the package is missing, has been obsoleted, or
-# is only available from another source
-echo "It seems that the missing unrar can be ingored, but included here anyhow... (is it really needed? ignore the error)"
-sudo apt-get install unrar
-
+  # unrar install gave an error this error, so pulled out into separate install
+  # even with the error, sees to work ok
+  #
+  # Package unrar is not available, but is referred to by another package.
+  # This may mean that the package is missing, has been obsoleted, or
+  # is only available from another source
+  echo "It seems that the missing unrar can be ingored, but included here anyhow... (is it really needed? ignore the error)"
+  sudo apt-get install unrar
+fi # end of if - RPi system update
 
 # now for the source code
 
 # we'll put everything in the home workspace directory
 cd ~
 if ! [[ -a ~/workspace ]]; then
-  echo create directory: workspace
+  echo "create directory: workspace"
   mkdir ~/workspace
 fi
 
 
 if [ "$1" != "MAKE-ONLY-ESP8266" ]; then
   #*******************************************************************************************************
-  # next git the pfalcon esp-open-sdk
-  # (I believe pfalcon warning that the esp=open-sdk need to be rebuilt fresh every time!)
+  # next fetch the pfalcon esp-open-sdk from github
+  # (I believe pfalcon warning that the esp=open-sdk needs to be rebuilt fresh every time!)
   #*******************************************************************************************************
   cd ~/workspace
   if ! [[ -a ~/workspace/esp-open-sdk ]]; then
@@ -186,7 +188,7 @@ if [ "$1" != "MAKE-ONLY-ESP8266" ]; then
   echo "*************************************************************************************************"
   cd ~/workspace/esp-open-sdk
 
-  make clean
+#  make clean
 
   git submodule update --init
   git fetch origin
@@ -203,28 +205,28 @@ if [ "$1" != "MAKE-ONLY-ESP8266" ]; then
   echo "*************************************************************************************************"
   # TODO - determine if git fetched anything new, if not, no need to rebuild!
   # compile esp-open-sdk (this takes a ridiculously long time)
-  make
+  read -n 1  -p  "Make would happen here..."
+#  make
 fi
 
 
-# should evenually get a message like this at the end. (note important path note!)
+# should evenually get a message like this at the end. (note important path note!):
 #
-# Xtensa toolchain is built, to use it:
+#   Xtensa toolchain is built, to use it:
 #
-# export PATH=/home/pi/workspace/esp-open-sdk/xtensa-lx106-elf/bin:$PATH
+#   export PATH=/home/pi/workspace/esp-open-sdk/xtensa-lx106-elf/bin:$PATH
 #
-# Espressif ESP8266 SDK is installed, its libraries and headers are merged with the toolchain
+#   Espressif ESP8266 SDK is installed, its libraries and headers are merged with the toolchain
 #
 
 # be sure to add the path as suggested (TODO - is it already in the path?)
 export PATH=/home/pi/workspace/esp-open-sdk/xtensa-lx106-elf/bin:$PATH
 
 #*******************************************************************************************************
-# next git micropython source
+# next, fetch micropython source from github
 #*******************************************************************************************************
 cd ~/workspace
 
-make clean
 
 if ! [[ -a ~/workspace/micropython ]]; then
   echo git micropython
@@ -237,13 +239,13 @@ echo "*  Update latest micropython from git "
 echo "*************************************************************************************************"
 echo "*************************************************************************************************"
 cd ~/workspace/micropython/
+
 git submodule update --init
 
 git fetch origin
 git pull
 
 # the next git commmands are suggested on https://github.com/pfalcon/esp-open-sdk
-git pull
 git submodule sync
 git submodule update
 
@@ -253,9 +255,13 @@ echo "**************************************************************************
 echo "*  Build ESP8266"
 echo "*************************************************************************************************"
 echo "*************************************************************************************************"
-make
-
 cd ~/workspace/micropython/esp8266
+
+  read -n 1  -p  "Make would happen here..."
+#make clean
+
+#make
+
 
 #*******************************************************************************************************
 # show the newly built firmware
@@ -266,13 +272,13 @@ echo "*  Newly built firmware in  ~/workspace/micropython/esp8266/build /"
 echo "*************************************************************************************************"
 echo "*************************************************************************************************"
 
-if  ([ -e  "~/workspace/micropython/esp8266/build/firmware-combined.bin" ]); then
+if  ([ -e  ~/workspace/micropython/esp8266/build/firmware-combined.bin ]); then
   ls ~/workspace/micropython/esp8266/build/firmware* -al
 else
   echo "ERROR: Fresh build file not found.  ~/workspace/micropython/esp8266/build/firmware-combined.bin"
   echo "Aborting..."
   exit 2
-fi 
+fi
 
 #*******************************************************************************************************
 # git the esptool
@@ -302,22 +308,27 @@ git submodule update
 
 chmod +x ~/workspace/esptool/esptool.py
 
-#*******************************************************************************************************
-# erase the flash (a good idea before applying new firmware)
-#*******************************************************************************************************
-echo "*************************************************************************************************"
-echo "*  Erasing..."
-echo "*************************************************************************************************"
-~/workspace/esptool/esptool.py --port /dev/ttyUSB0 erase_flash
+if [ -c "$MYDEVICE" ]; then
+  #*******************************************************************************************************
+  # erase the flash (a good idea before applying new firmware)
+  #*******************************************************************************************************
+  echo "*************************************************************************************************"
+  echo "*  Erasing..."
+  echo "*************************************************************************************************"
+  ~/workspace/esptool/esptool.py --port "$MYDEVICE" erase_flash
 
-#*******************************************************************************************************
-# send newly compiled image to your ESP8266
-#*******************************************************************************************************
-echo "*************************************************************************************************"
-echo "*  Writing image..."
-echo "*************************************************************************************************"
-~/workspace/esptool/esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash --flash_size=8m 0 \
+  #*******************************************************************************************************
+  # send newly compiled image to your ESP8266
+  #*******************************************************************************************************
+  echo "*************************************************************************************************"
+  echo "*  Writing image..."
+  echo "*************************************************************************************************"
+  ~/workspace/esptool/esptool.py --port "$MYDEVICE" --baud 460800 write_flash --flash_size=8m 0 \
                                       ~/workspace/micropython/esp8266/build/firmware-combined.bin
+else
+  echo "Device $MYDEVICE not found."
+  exit 1
+fi
 
 #
 # successful write should look like this:
@@ -339,6 +350,8 @@ echo "**************************************************************************
 
 # ready to connect!
 # reminder Ctril-A Z X to exit minocom
+#
+# sudo apt-get install minicom  --assume-yes
 # minicom --device /dev/ttyUSB0 115200
 
 # you probably want to reset the ESP8266 after fresh firmware
@@ -386,15 +399,25 @@ echo "**************************************************************************
 # uncomment if you have a file called myI2C.py, and want to send it to the ESP8266 via pyboard.py
 # python pyboard.py --device /dev/ttyUSB0 myI2C.py
 
-# uncomment if you want to quickly see if the ESP8266 is operational
-python pyboard.py --device /dev/ttyUSB0 -c 'print("hello world")'
-
+# if you want to quickly see if the ESP8266 is operational
+cd ~/workspace
+echo "If the firmware uploaded correctly, now would be a good time to press reset on your ESP8266."
+echo "If hello world prints, then MicroPython is probably working!"
+read -n 1  -p "Press a key to continue..."
+echo ""
+python micropython/tools/pyboard.py --device "$MYDEVICE" -c 'print("hello world")'
+echo ""
 # uncomment if you con't want to use minicom but need to open a terminal session to ESP8266
 # sudo screen /dev/ttyUSB0 115200
 # reminder:
 #
 # Ctrl-A Ctrl-D to detach, then connect later with screen -r   (holds the serial port in use!)
 # per deshipu: To exit screen, use "ctrl+a ctrl+k" or "ctrl+a ctrl+K" (the latter if you don't want a confirmation question).
+
+echo ""
+echo "For auto-completion, do not forget to install 'ct-ng.comp' into"
+echo "your bash completion directory (usually /etc/bash_completion.d)"
+echo ""
 
 echo "Done!"
 
