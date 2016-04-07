@@ -3,13 +3,22 @@ This is the source code to build MicroPython for the ESP8266 on a Raspberry Pi.
 
 ## References
 
- [1] http://forum.micropython.org/viewforum.php?f=16 
+ [1] https://downloads.raspberrypi.org/raspbian_latest
+     Latest binary image to write to Raspberry Pi SD Flash
+
+ [2] https://sourceforge.net/projects/win32diskimager/files/Archive/Win32DiskImager-0.9.5-install.exe/download
+     executable image for win32diskimager (useful for getting binary image from Windows onto RPi SD card)
+
+ [3] https://sourceforge.net/projects/win32diskimager/
+     More info for win32diskimager tool
+
+ [4] http://forum.micropython.org/viewforum.php?f=16 
      The MicroPython ESP8266 Forum
 
- [2] https://github.com/pfalcon/esp-open-sdk 
+ [5] https://github.com/pfalcon/esp-open-sdk 
      The eps-open-sdk  (required to build for ESP8266)
 
- [3] https://github.com/micropython 
+ [6] https://github.com/micropython 
      The MicroPython source
 
 
