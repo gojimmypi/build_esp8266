@@ -1,16 +1,16 @@
 # BUILD ESP8266
-This is the source code to build MicroPython for the ESP8266 on a Raspberry Pi
+This is the source code to build MicroPython for the ESP8266 on a Raspberry Pi.
 
 ## References
 
-[1] http://forum.micropython.org/viewforum.php?f=16
-    The MicroPython ESP8266 Forum
+ [1] http://forum.micropython.org/viewforum.php?f=16 
+     The MicroPython ESP8266 Forum
 
-[2] https://github.com/pfalcon/esp-open-sdk
-    The eps-open-sdk  (required to build for ESP8266)
+ [2] https://github.com/pfalcon/esp-open-sdk 
+     The eps-open-sdk  (required to build for ESP8266)
 
-[3] https://github.com/micropython
-    The MicroPython source
+ [3] https://github.com/micropython 
+     The MicroPython source
 
 
 ## License
