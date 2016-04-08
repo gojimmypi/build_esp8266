@@ -52,6 +52,7 @@
 #
 MYDEVICE="/dev/ttyUSB0"
 
+
 #*******************************************************************************************************
 # startup: show help as needed
 #*******************************************************************************************************
@@ -417,7 +418,11 @@ echo "For auto-completion, do not forget to install 'ct-ng.comp' into"
 echo "your bash completion directory (usually /etc/bash_completion.d)"
 echo ""
 
+echo "To run tests:"
+echo ""
+echo "cd ~/workspace/micropython/tests/"
+echo "./run-tests  --target esp8266 --device $MYDEVICE"
+echo ""
+echo ""
 echo "Done!"
-
-
-
+exit 0
