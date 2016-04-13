@@ -381,7 +381,8 @@ if [ -c "$MYDEVICE" ]; then
   ~/workspace/esptool/esptool.py --port "$MYDEVICE" --baud 460800 write_flash --flash_size=8m 0 \
                                       ~/workspace/micropython/esp8266/build/firmware-combined.bin
 else
-  echo "Device $MYDEVICE not found."
+  echo "Device $MYDEVICE not found. You will need to manually upload firmware."
+  echo "See MYDEVICE setting in this script."
   exit 1
 fi
 
