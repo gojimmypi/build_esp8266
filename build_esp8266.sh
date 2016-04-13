@@ -108,6 +108,8 @@ EXIT_STAT=$?
 if [ $EXIT_STAT -ne 0 ];then
   echo "sudo appears to not be installed. attempting to install with su."
   su --command 'apt-get install sudo  --assume-yes'
+  echo "Adding $USER to /etc/sudoers..."
+  su --command 'echo "$USER ALL=(ALL:ALL) ALL" >> /etc/sudoers'
 
   # test again
   sudo ls /root > /dev/null 2>/dev/null
