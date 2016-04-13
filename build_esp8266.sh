@@ -2,12 +2,15 @@
 #*********************************************************************************************
 # ESP8266 MicroPython Firmware Build on RPi, by gojimmypi
 #
-#  version 0.03
+#  version 0.04
 #
 #  GNU GENERAL PUBLIC LICENSE
 #
 # NOTE: you will need a lot of free disk space. This will likely not work on an 8GB RPi SD.
 #
+#
+# 12APR16 - only update the path if ../xtensa-lx106-elf/.. not found in path
+#         - remove hard coded path reference to /home/pi/ for general debian use
 #
 #*******************************************************************************************************
 # For new RPi install, on a windows machine:
@@ -219,8 +222,12 @@ fi
 #   Espressif ESP8266 SDK is installed, its libraries and headers are merged with the toolchain
 #
 
-# be sure to add the path as suggested (TODO - is it already in the path?)
-export PATH=/home/pi/workspace/esp-open-sdk/xtensa-lx106-elf/bin:$PATH
+# be sure to add the path as suggested
+
+if [[ $PATH != */workspace/esp-open-sdk/xtensa-lx106-elf/bin* ]]; then
+  export PATH=~/workspace/esp-open-sdk/xtensa-lx106-elf/bin:$PATH
+fi
+
 
 #*******************************************************************************************************
 # next, fetch micropython source from github
