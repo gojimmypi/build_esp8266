@@ -107,6 +107,11 @@ sudo ls /root > /dev/null 2>/dev/null
 EXIT_STAT=$?
 if [ $EXIT_STAT -ne 0 ];then
   echo "sudo appears to not be installed. attempting to install with su."
+  echo "You will need to enter root password several times."
+  echo "Press Ctrl-C now if you want to install and configure sudo yourself."
+  echo ""
+  read -n 1  -p "Press a key to continue..."
+  echo ""
   su --command 'apt-get install sudo  --assume-yes'
   echo "Adding $USER to /etc/sudoers..."
   THISUSER=$(whoami)
@@ -137,7 +142,11 @@ fi
 if [ "$1" == "FULL" ]; then
   echo "*************************************************************************************************"
   echo "*************************************************************************************************"
-  echo "  Update Raspberry Pi and install dependencies as needed "
+  if [[ -a /home/pi/ ]]; then
+    echo "  Updating Raspberry Pi and install dependencies as needed... "
+  else
+    echo "  Updating Debian and install dependencies as needed... "
+  fi
   echo "*************************************************************************************************"
   echo "*************************************************************************************************"
 
@@ -341,7 +350,7 @@ if ! [[ -a ~/workspace/esptool ]]; then
 fi
 
 cd ~/workspace/esptool/
-# TODO - are these git commands really all needed for updates? 
+# TODO - are these git commands really all needed for updates?
 git submodule update --init
 
 git fetch origin
