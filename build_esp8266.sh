@@ -2,13 +2,14 @@
 #*********************************************************************************************
 # ESP8266 MicroPython Firmware Build on RPi, by gojimmypi
 #
-#  version 0.04
+#  version 0.05
 #
 #  GNU GENERAL PUBLIC LICENSE
 #
 # NOTE: you will need a lot of free disk space. This will likely not work on an 8GB RPi SD.
 #
 #
+# 13ARP16 - support for use on Debian linux in addition to RPi Raspian
 # 12APR16 - only update the path if ../xtensa-lx106-elf/.. not found in path
 #         - remove hard coded path reference to /home/pi/ for general debian use
 #
@@ -99,6 +100,26 @@ else
 fi
 
 
+#*******************************************************************************************************
+# now check if sudo is installed (some installs must run as root, but build must not)
+#*******************************************************************************************************
+sudo ls /root > /dev/null 2>/dev/null
+EXIT_STAT=$?
+if [ $EXIT_STAT -ne 0 ];then
+  echo "sudo appears to not be installed. please run as root:"
+  echo "apt-get install sudo"
+  echo ""
+  echo "Then edit /etc/sudoers"
+  echo "Add the line: $USER ALL=(ALL:ALL) ALL"
+  exit 2
+else
+  echo "It appears sudo is installed and working properly."
+fi
+
+
+#*******************************************************************************************************
+# check commandline params
+#*******************************************************************************************************
 if [ "$1" == "FULL" ]; then
   echo "*************************************************************************************************"
   echo "*************************************************************************************************"
@@ -109,8 +130,10 @@ if [ "$1" == "FULL" ]; then
   #*******************************************************************************************************
   #
   #*******************************************************************************************************
-  # update RPi firmware
-  sudo rpi-update --assume-yes
+  # update RPi firmware (we assume this is an RPi if there's a /home/pi/ directory.
+  if [[ -a /home/pi/ ]]; then
+    sudo rpi-update --assume-yes
+  fi
 
   # standard update
   sudo apt-get update --assume-yes && time sudo apt-get dist-upgrade --assume-yes
@@ -118,6 +141,9 @@ if [ "$1" == "FULL" ]; then
   # git should be installed, but let's just be sure
 
   sudo apt-get install git --assume-yes
+
+  # RPi usually has the build tools installed, but perhaps Debian does not
+  sudo apt-get install build-essential --assume-yes
 
   # completely optional, but I like to have xrdp (so that I can use Windows remote desktop)
   # sudo apt-get install xrdp
