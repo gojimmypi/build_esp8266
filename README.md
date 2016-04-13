@@ -1,5 +1,14 @@
 # BUILD ESP8266
-This is the source code to build MicroPython for the ESP8266 on a Raspberry Pi.
+This is the source code to build MicroPython for the ESP8266 on a Raspberry Pi (or debian).
+
+## debian_specific.sh  
+If you are not using a Raspberry Pi, then there are some things on Debian that are not installed by default.
+
+## quick_start.sh 
+To get started quickly, here's a simple script to fetch the build script, flag it as executable, and run it:
+
+## build_esp8266.sh  
+This is the main script to build MicroPython for the ESP8266
 
 ## References
 
