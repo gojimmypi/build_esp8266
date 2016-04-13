@@ -106,12 +106,22 @@ fi
 sudo ls /root > /dev/null 2>/dev/null
 EXIT_STAT=$?
 if [ $EXIT_STAT -ne 0 ];then
-  echo "sudo appears to not be installed. please run as root:"
-  echo "apt-get install sudo"
-  echo ""
-  echo "Then edit /etc/sudoers"
-  echo "Add the line: $USER ALL=(ALL:ALL) ALL"
-  exit 2
+  echo "sudo appears to not be installed. attempting to install with su."
+  su --command 'apt-get install sudo  --assume-yes'
+
+  # test again
+  sudo ls /root > /dev/null 2>/dev/null
+  EXIT_STAT=$?
+  if [ $EXIT_STAT -ne 0 ];then
+    echo "sudo appears to not be installed. please run as root:"
+    echo "apt-get install sudo"
+    echo ""
+    echo "Then edit /etc/sudoers"
+    echo "Add the line: $USER ALL=(ALL:ALL) ALL"
+    exit 2
+  else
+    echo "It appears sudo install was successful and is working properly."
+  fi
 else
   echo "It appears sudo is installed and working properly."
 fi
