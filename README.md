@@ -10,6 +10,11 @@ To get started quickly, here's a simple script to fetch the build script, flag i
 ## build_esp8266.sh  
 This is the main script to build MicroPython for the ESP8266
 
+## Comments & feedback
+You can leave messages on the MicroPython forum:
+
+http://forum.micropython.org/viewtopic.php?f=16&t=1720
+
 ## References
 
  [1] https://downloads.raspberrypi.org/raspbian_latest
