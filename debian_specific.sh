@@ -1,4 +1,4 @@
-#!/bin/bash
+# this is not a bash script, rather best used as copy & paste since su command will start a new shell
 
 #start root shell
 su
