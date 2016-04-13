@@ -364,6 +364,18 @@ git submodule update
 chmod +x ~/workspace/esptool/esptool.py
 
 if [ -c "$MYDEVICE" ]; then
+  echo "*************************************************************************************************"
+  echo "*  Changing permissions on $MYDEVICE"
+  echo "*************************************************************************************************"
+  if [[ -a /home/pi/ ]]; then
+    sudo chown pi:pi $MYDEVICE
+  else
+    sudo chmod 777 $MYDEVICE
+    THISUSER=$(whoami)
+    sudo adduser $THISUSER dialout
+    # refresh group membership without logging out
+    newgrp dialout
+  fi
   #*******************************************************************************************************
   # erase the flash (a good idea before applying new firmware)
   #*******************************************************************************************************
@@ -463,7 +475,7 @@ read -n 1  -p "Press a key to continue..."
 echo ""
 python micropython/tools/pyboard.py --device "$MYDEVICE" -c 'print("hello world")'
 echo ""
-# uncomment if you con't want to use minicom but need to open a terminal session to ESP8266
+# uncomment if you don't want to use minicom but need to open a terminal session to ESP8266
 # sudo screen /dev/ttyUSB0 115200
 # reminder:
 #
