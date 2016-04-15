@@ -2,13 +2,13 @@
 #*********************************************************************************************
 # ESP8266 MicroPython Firmware Build on RPi, by gojimmypi
 #
-#  version 0.05
+#  version 0.06
 #
 #  GNU GENERAL PUBLIC LICENSE
 #
 # NOTE: you will need a lot of free disk space. This will likely not work on an 8GB RPi SD.
 #
-#
+# 14APR16 - check device at startup using esptool.py --port /dev/ttyUSB0 flash_id
 # 13ARP16 - support for use on Debian linux in addition to RPi Raspian
 # 12APR16 - only update the path if ../xtensa-lx106-elf/.. not found in path
 #         - remove hard coded path reference to /home/pi/ for general debian use
@@ -55,7 +55,7 @@
 # section of the "Technical FAQ".
 #
 MYDEVICE="/dev/ttyUSB0"
-
+DEVICEFOUND=0
 
 #*******************************************************************************************************
 # startup: show help as needed
@@ -70,7 +70,7 @@ if [ "$1" == "" ] ||  [ "$1" == "HELP" ]; then
   echo "    show this help. Source will be placed in ~/workspace/ directory."
   echo ""
   echo "  FULL"
-  echo "     Update RPi, download latest esp-open-sdk and micropython, build everything, erase and upload new binary to $MYDEVICE"
+  echo "     Update OS and installed apps, download latest esp-open-sdk and micropython, build everything, erase and upload new binary to $MYDEVICE"
   echo ""
   echo "  MAKE-ONLY"
   echo "     Download latest esp-open-sdk and micropython, build everything."
@@ -78,13 +78,19 @@ if [ "$1" == "" ] ||  [ "$1" == "HELP" ]; then
   echo "  MAKE-ONLY-ESP8266"
   echo "     Download latest micropython and build (skip esp-open-sdk)."
   echo ""
+  echo "  RUN-TESTS"
+  echo "     Run the esp8266 test script"
+  echo ""
+  echo "  FLASH-ONLY"
+  echo "     Only writing existing flash to device. (no updates, no build)"
   exit 0
 fi
 
-if [ "$1" != "FULL" ] && [ "$1" != "MAKE-ONLY" ] &&  [ "$1" != "MAKE-ONLY-ESP8266" ]; then
+if [ "$1" != "FULL" ] && [ "$1" != "MAKE-ONLY" ] &&  [ "$1" != "MAKE-ONLY-ESP8266" ] &&  [ "$1" != "FLASH-ONLY" ]  &&  [ "$1" != "RUN-TESTS" ]; then
   echo "$1  not a valid option. try ./build_esp8266.sh HELP "
   exit 0
 fi
+
 
 #*******************************************************************************************************
 # ensure we are not running as root
@@ -122,7 +128,7 @@ if [ $EXIT_STAT -ne 0 ];then
   sudo ls /root > /dev/null 2>/dev/null
   EXIT_STAT=$?
   if [ $EXIT_STAT -ne 0 ];then
-    echo "sudo appears to not be installed. please run as root:"
+    echo "Error: sudo appears to not be installed. please run as root:"
     echo "apt-get install sudo"
     echo ""
     echo "Then edit /etc/sudoers"
@@ -135,9 +141,86 @@ else
   echo "It appears sudo is installed and working properly."
 fi
 
+#*******************************************************************************************************
+# git the esptool
+#*******************************************************************************************************
+echo "*************************************************************************************************"
+echo "*************************************************************************************************"
+echo "*  Get latest esptool "
+echo "*************************************************************************************************"
+echo "*************************************************************************************************"
+cd ~/workspace
+if ! [[ -a ~/workspace/esptool ]]; then
+  echo "git clone esptool..."
+  git clone https://github.com/themadinventor/esptool/
+fi
+
+cd ~/workspace/esptool/
+# TODO - are these git commands really all needed for updates?
+git submodule update --init
+
+git fetch origin
+git pull
+
+# the next git commmands are suggested on https://github.com/pfalcon/esp-open-sdk
+git pull
+git submodule sync
+git submodule update
+
+chmod +x ~/workspace/esptool/esptool.py
 
 #*******************************************************************************************************
+# check to see if a device is connected amd send the new firmware
+#*******************************************************************************************************
+if [ -c "$MYDEVICE" ]; then
+  DEVICEFOUND=1
+  echo "*************************************************************************************************"
+  echo "*  Changing permissions on $MYDEVICE"
+  echo "*************************************************************************************************"
+  if [[ -a /home/pi/ ]]; then
+    sudo chown pi:pi $MYDEVICE
+  else
+    sudo chmod 777 $MYDEVICE
+    THISUSER=$(whoami)
+    sudo adduser $THISUSER dialout
+    # refresh group membership without logging out
+    newgrp dialout
+  fi
+else
+  echo "Device $MYDEVICE not found. You will need to manually upload firmware."
+  echo "See MYDEVICE setting in this script."
+  echo ""
+  echo "Try simply pressing reset."
+  read -n 1  -p "Press a key to continue (or Ctrl-C to abort)..."
+fi
+
+
+#*******************************************************************************************************
+# use esptool.py to check connected device
+#*******************************************************************************************************
+echo ""
+echo "Checking connected device at $MYDEVICE"
+~/workspace/esptool/esptool.py --port /dev/ttyUSB0 flash_id
+EXIT_STAT=$?
+if [ $EXIT_STAT -ne 0 ];then
+  DEVICEFOUND=0
+  echo ""
+  echo "Error: a problem was found attempting to check device on port $MYDEVICE"
+  echo ""
+  echo "Try simply pressing reset on the ESP8266"
+  read -n 1  -p "Press a key to continue (or Ctrl-C to abort)..."
+fi
+
+
+
+#*******************************************************************************************************
+#*******************************************************************************************************
 # check commandline params
+#*******************************************************************************************************
+#*******************************************************************************************************
+
+#*******************************************************************************************************
+# check if we are doing a FULL update, inclusing OS updates
 #*******************************************************************************************************
 if [ "$1" == "FULL" ]; then
   echo "*************************************************************************************************"
@@ -213,6 +296,8 @@ if [ "$1" == "FULL" ]; then
   sudo apt-get install unrar
 fi # end of if - RPi system update
 
+
+
 # now for the source code
 
 # we'll put everything in the home workspace directory
@@ -222,15 +307,50 @@ if ! [[ -a ~/workspace ]]; then
   mkdir ~/workspace
 fi
 
+if [ "$1" == "MAKE-ONLY" ] || [ "$1" == "FULL" ]; then
+  #*******************************************************************************************************
+  # check that gcc is installed before attempting to build
+  #*******************************************************************************************************
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
+  echo " Checking toolchain basics... "
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
 
-if [ "$1" != "MAKE-ONLY-ESP8266" ]; then
+  whereis gcc make
+  EXIT_STAT=$?
+  if [ $EXIT_STAT -ne 0 ];then
+    echo "Error: make not found"
+    exit 2
+  else
+    echo "Success: It appears make was found."
+  fi
+
+  gcc -v
+  EXIT_STAT=$?
+  if [ $EXIT_STAT -ne 0 ];then
+    echo "Error: gcc not found"
+    exit 2
+  else
+    echo "Success: It appears gcc was found."
+  fi
+
+  make -v
+  EXIT_STAT=$?
+  if [ $EXIT_STAT -ne 0 ];then
+    echo "Error: make not found"
+    exit 2
+  else
+    echo "Success: It appears make was found."
+  fi
+
   #*******************************************************************************************************
   # next fetch the pfalcon esp-open-sdk from github
   # (I believe pfalcon warning that the esp=open-sdk needs to be rebuilt fresh every time!)
   #*******************************************************************************************************
   cd ~/workspace
   if ! [[ -a ~/workspace/esp-open-sdk ]]; then
-    echo git esp-open-sdk
+    echo "git clone esp-open-sdk"
     git clone --recursive https://github.com/pfalcon/esp-open-sdk.git
   fi
 
@@ -279,43 +399,63 @@ fi
 
 
 #*******************************************************************************************************
-# next, fetch micropython source from github
+# next, fetch micropython source from github and build, as needed (skip if we are only writing firmware)
 #*******************************************************************************************************
-cd ~/workspace
+if [ "$1" == "FULL" ] || [ "$1" == "MAKE-ONLY" ] ||  [ "$1" == "MAKE-ONLY-ESP8266" ] || [ "$1" == "RUN-TESTS" ]; then
+  cd ~/workspace
 
+  if ! [[ -a ~/workspace/micropython ]]; then
+    echo "git clone micropython"
+    git clone --recursive https://github.com/micropython/micropython.git
+  fi
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
+  echo "*  Update latest micropython from git "
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
+  cd ~/workspace/micropython/
 
-if ! [[ -a ~/workspace/micropython ]]; then
-  echo git micropython
-  git clone --recursive https://github.com/micropython/micropython.git
+  git submodule update --init
+
+  git fetch origin
+  git pull
+
+  # the next git commmands are suggested on https://github.com/pfalcon/esp-open-sdk
+  git submodule sync
+  git submodule update
 fi
 
-echo "*************************************************************************************************"
-echo "*************************************************************************************************"
-echo "*  Update latest micropython from git "
-echo "*************************************************************************************************"
-echo "*************************************************************************************************"
-cd ~/workspace/micropython/
+#*******************************************************************************************************
+# check if we are only running tests  (note we need to ensure we have the lasted MicroPython scripts!)
+#*******************************************************************************************************
+if [ "$1" == "RUN-TESTS" ]; then
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
+  echo "*  Running MicroPython tests... "
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
+  cd ~/workspace/micropython/tests/
+  ./run-tests  --target esp8266 --device $MYDEVICE
+  echo "Done!"
+  exit 0
+fi
 
-git submodule update --init
 
-git fetch origin
-git pull
+#*******************************************************************************************************
+# build the esp8266 MicroPython firmware
+#*******************************************************************************************************
+if [ "$1" == "FULL" ] || [ "$1" == "MAKE-ONLY" ] ||  [ "$1" == "MAKE-ONLY-ESP8266" ]; then
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
+  echo "*  Build ESP8266"
+  echo "*************************************************************************************************"
+  echo "*************************************************************************************************"
+  cd ~/workspace/micropython/esp8266
 
-# the next git commmands are suggested on https://github.com/pfalcon/esp-open-sdk
-git submodule sync
-git submodule update
+  make clean
 
-
-echo "*************************************************************************************************"
-echo "*************************************************************************************************"
-echo "*  Build ESP8266"
-echo "*************************************************************************************************"
-echo "*************************************************************************************************"
-cd ~/workspace/micropython/esp8266
-
-make clean
-
-make
+  make
+fi
 
 
 #*******************************************************************************************************
@@ -323,7 +463,7 @@ make
 #*******************************************************************************************************
 echo "*************************************************************************************************"
 echo "*************************************************************************************************"
-echo "*  Newly built firmware in  ~/workspace/micropython/esp8266/build /"
+echo "*  Newly built firmware in  ~/workspace/micropython/esp8266/build/"
 echo "*************************************************************************************************"
 echo "*************************************************************************************************"
 
@@ -335,34 +475,19 @@ else
   exit 2
 fi
 
-#*******************************************************************************************************
-# git the esptool
-#*******************************************************************************************************
-echo "*************************************************************************************************"
-echo "*************************************************************************************************"
-echo "*  Get latest esptool "
-echo "*************************************************************************************************"
-echo "*************************************************************************************************"
-cd ~/workspace
-if ! [[ -a ~/workspace/esptool ]]; then
-  echo git esptool
-  git clone https://github.com/themadinventor/esptool/
+
+if [ "$DEVICEFOUND" == "0" ]; then
+  echo "Device not found, exiting."
+  exit 2
 fi
 
-cd ~/workspace/esptool/
-# TODO - are these git commands really all needed for updates?
-git submodule update --init
+echo "Ready to send firmware-combined.bin to $MYDEVICE (press reset on ESP8266 now if desired)"
+echo ""
+read -n 1  -p "Press a key to continue (or Ctrl-C to abort)..."
 
-git fetch origin
-git pull
-
-# the next git commmands are suggested on https://github.com/pfalcon/esp-open-sdk
-git pull
-git submodule sync
-git submodule update
-
-chmod +x ~/workspace/esptool/esptool.py
-
+#*******************************************************************************************************
+# check to see if a device is connected amd send the new firmware
+#*******************************************************************************************************
 if [ -c "$MYDEVICE" ]; then
   echo "*************************************************************************************************"
   echo "*  Changing permissions on $MYDEVICE"
@@ -370,10 +495,12 @@ if [ -c "$MYDEVICE" ]; then
   if [[ -a /home/pi/ ]]; then
     sudo chown pi:pi $MYDEVICE
   else
+    echo "Changing permissions on $MYDEVICE ..."
     sudo chmod 777 $MYDEVICE
     THISUSER=$(whoami)
+    echo "Adding $THISUSER to dialout group..."
     sudo adduser $THISUSER dialout
-    # refresh group membership without logging out
+    echo "Refreshing group membership without logging out..."
     newgrp dialout
   fi
   #*******************************************************************************************************
@@ -395,7 +522,7 @@ if [ -c "$MYDEVICE" ]; then
 else
   echo "Device $MYDEVICE not found. You will need to manually upload firmware."
   echo "See MYDEVICE setting in this script."
-  exit 1
+  read -n 1  -p "Press a key to continue (or Ctrl-C to abort)..."
 fi
 
 #
@@ -489,8 +616,7 @@ echo ""
 
 echo "To run tests:"
 echo ""
-echo "cd ~/workspace/micropython/tests/"
-echo "./run-tests  --target esp8266 --device $MYDEVICE"
+echo "~/workspace/micropython/tests/run-tests  --target esp8266 --device $MYDEVICE"
 echo ""
 echo ""
 echo "Done!"
