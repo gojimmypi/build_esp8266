@@ -184,7 +184,7 @@ if [ -c "$MYDEVICE" ]; then
     THISUSER=$(whoami)
     sudo adduser $THISUSER dialout
     # refresh group membership without logging out
-    newgrp dialout
+    # echo $(newgrp dialout)
   fi
 else
   echo "Device $MYDEVICE not found. You will need to manually upload firmware."
@@ -501,7 +501,7 @@ if [ -c "$MYDEVICE" ]; then
     echo "Adding $THISUSER to dialout group..."
     sudo adduser $THISUSER dialout
     echo "Refreshing group membership without logging out..."
-    newgrp dialout
+    # newgrp dialout
   fi
   #*******************************************************************************************************
   # erase the flash (a good idea before applying new firmware)
