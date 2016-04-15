@@ -287,6 +287,9 @@ if [ "$1" == "FULL" ]; then
   # listed as "maybe" but was required for me on raspian jessie
   sudo apt-get install libtool-bin --assume-yes
 
+  # to run the /micropython/tests/run-tests we need to have python serial support installed
+  sudo apt-get install python3-serial --assume-yes
+
   # unrar install gave an error this error, so pulled out into separate install
   # even with the error, sees to work ok
   #
