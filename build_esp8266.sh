@@ -182,9 +182,10 @@ if [ -c "$MYDEVICE" ]; then
   else
     sudo chmod 777 $MYDEVICE
     THISUSER=$(whoami)
-    sudo adduser $THISUSER dialout
+    # sudo adduser $THISUSER dialout # this is not immediately effective
+    sudo gpasswd -a $THISUSER dialout
     # refresh group membership without logging out
-    # echo $(newgrp dialout)
+    # echo $(newgrp dialout) # this starts a new shell
   fi
 else
   echo "Device $MYDEVICE not found. You will need to manually upload firmware."
@@ -499,9 +500,10 @@ if [ -c "$MYDEVICE" ]; then
     sudo chmod 777 $MYDEVICE
     THISUSER=$(whoami)
     echo "Adding $THISUSER to dialout group..."
-    sudo adduser $THISUSER dialout
+    # sudo adduser $THISUSER dialout # this is not immediately effective
+    sudo gpasswd -a $THISUSER dialout
     echo "Refreshing group membership without logging out..."
-    # newgrp dialout
+    # newgrp dialout # this starts a new shell
   fi
   #*******************************************************************************************************
   # erase the flash (a good idea before applying new firmware)
