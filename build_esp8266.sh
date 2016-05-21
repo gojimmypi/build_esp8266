@@ -459,6 +459,8 @@ if [ "$1" == "FULL" ] || [ "$1" == "MAKE-ONLY" ] ||  [ "$1" == "MAKE-ONLY-ESP826
 
   make clean
 
+  make axtls
+
   make
 fi
 
