@@ -2,12 +2,13 @@
 #*********************************************************************************************
 # ESP8266 MicroPython Firmware Build on RPi, by gojimmypi
 #
-#  version 0.06
+#  version 0.07
 #
 #  GNU GENERAL PUBLIC LICENSE
 #
 # NOTE: you will need a lot of free disk space. This will likely not work on an 8GB RPi SD.
 #
+# 15APR16 - ensure python3 serial is installed
 # 14APR16 - check device at startup using esptool.py --port /dev/ttyUSB0 flash_id
 # 13ARP16 - support for use on Debian linux in addition to RPi Raspian
 # 12APR16 - only update the path if ../xtensa-lx106-elf/.. not found in path
@@ -549,10 +550,15 @@ fi
 # minicom -o -s
 
 # ready to connect!
-# reminder Ctril-A Z X to exit minocom
+# reminder Ctrl-A Z X to exit minocom
 #
 # sudo apt-get install minicom  --assume-yes
 # minicom --device /dev/ttyUSB0 115200
+
+# if you see an error like: minicom: cannot open /dev/modem
+# then change the device like this:
+# minicom -D /dev/ttyUSB0
+# (or be sure to specify --device /dev/ttyUSB0
 
 # you probably want to reset the ESP8266 after fresh firmware
 # connect first, and see the very first startup message!
@@ -605,8 +611,12 @@ echo "If the firmware uploaded correctly, now would be a good time to press rese
 echo "If hello world prints, then MicroPython is probably working!"
 read -n 1  -p "Press a key to continue..."
 echo ""
-python micropython/tools/pyboard.py --device "$MYDEVICE" -c 'print("hello world")'
+python ~/workspace/micropython/tools/pyboard.py --device "$MYDEVICE" -c 'print("hello world")'
 echo ""
+
+apt-cache policy python3 python
+~/workspace/esp-open-sdk/xtensa-lx106-elf/bin/xtensa-lx106-elf-cc --version
+
 # uncomment if you don't want to use minicom but need to open a terminal session to ESP8266
 # sudo screen /dev/ttyUSB0 115200
 # reminder:
