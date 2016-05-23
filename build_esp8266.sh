@@ -56,6 +56,7 @@
 # section of the "Technical FAQ".
 #
 MYDEVICE="/dev/ttyUSB0"
+MYBAUD="115200"  # could be as high as 460800
 DEVICEFOUND=0
 
 #*******************************************************************************************************
@@ -142,6 +143,12 @@ else
   echo "It appears sudo is installed and working properly."
 fi
 
+
+if ! [[ -a ~/workspace ]]; then
+  echo "Creating directory ~/workspace"
+  mkdir ~/workspace
+fi
+
 #*******************************************************************************************************
 # git the esptool
 #*******************************************************************************************************
@@ -173,18 +180,20 @@ chmod +x ~/workspace/esptool/esptool.py
 #*******************************************************************************************************
 # check to see if a device is connected amd send the new firmware
 #*******************************************************************************************************
+echo ""
+echo "Checking device at $MYDEVICE..."
 if [ -c "$MYDEVICE" ]; then
   DEVICEFOUND=1
   echo "*************************************************************************************************"
   echo "*  Changing permissions on $MYDEVICE"
   echo "*************************************************************************************************"
   if [[ -a /home/pi/ ]]; then
-    sudo chown pi:pi $MYDEVICE
+    sudo chown pi:pi "$MYDEVICE"
   else
-    sudo chmod 777 $MYDEVICE
+    sudo chmod 777 "$MYDEVICE"
     THISUSER=$(whoami)
-    # sudo adduser $THISUSER dialout # this is not immediately effective
-    sudo gpasswd -a $THISUSER dialout
+    # old cmd: sudo adduser $THISUSER dialout # this is not immediately effective
+    sudo gpasswd -a "$THISUSER" dialout
     # refresh group membership without logging out
     # echo $(newgrp dialout) # this starts a new shell
   fi
@@ -201,8 +210,8 @@ fi
 # use esptool.py to check connected device
 #*******************************************************************************************************
 echo ""
-echo "Checking connected device at $MYDEVICE"
-~/workspace/esptool/esptool.py --port /dev/ttyUSB0 flash_id
+echo "Checking connected device at $MYDEVICE at $MYBAUD baud with esptool..."
+~/workspace/esptool/esptool.py --port "$MYDEVICE" --baud "$MYBAUD" flash_id
 EXIT_STAT=$?
 if [ $EXIT_STAT -ne 0 ];then
   DEVICEFOUND=0
@@ -495,6 +504,7 @@ read -n 1  -p "Press a key to continue (or Ctrl-C to abort)..."
 #*******************************************************************************************************
 # check to see if a device is connected amd send the new firmware
 #*******************************************************************************************************
+echo "Looking for $MYDEVICE ..."
 if [ -c "$MYDEVICE" ]; then
   echo "*************************************************************************************************"
   echo "*  Changing permissions on $MYDEVICE"
@@ -525,7 +535,7 @@ if [ -c "$MYDEVICE" ]; then
   echo "*************************************************************************************************"
   echo "*  Writing image..."
   echo "*************************************************************************************************"
-  ~/workspace/esptool/esptool.py --port "$MYDEVICE" --baud 460800 write_flash --flash_size=8m 0 \
+  ~/workspace/esptool/esptool.py --port "$MYDEVICE" --baud "$MYBAUD" write_flash --flash_size=8m 0 \
                                       ~/workspace/micropython/esp8266/build/firmware-combined.bin
 else
   echo "Device $MYDEVICE not found. You will need to manually upload firmware."
