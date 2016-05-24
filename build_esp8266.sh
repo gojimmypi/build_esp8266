@@ -8,6 +8,7 @@
 #
 # NOTE: you will need a lot of free disk space. This will likely not work on an 8GB RPi SD.
 #
+# 24MAY16 - implement execUntilSuccessful to allow repeat retries calling esptool.py
 # 15APR16 - ensure python3 serial is installed
 # 14APR16 - check device at startup using esptool.py --port /dev/ttyUSB0 flash_id
 # 13ARP16 - support for use on Debian linux in addition to RPi Raspian
@@ -93,6 +94,25 @@ if [ "$1" != "FULL" ] && [ "$1" != "MAKE-ONLY" ] &&  [ "$1" != "MAKE-ONLY-ESP826
   exit 0
 fi
 
+#*******************************************************************************************************
+#  a function to wrap commands in a repeat-until-successful loop
+#*******************************************************************************************************
+function execUntilSuccessful() {
+  echo "running command: " $1
+  eval $1
+  EXIT_STAT=$?
+  while [ $EXIT_STAT -ne 0 ]; do
+    echo ""
+    echo "Error: a problem was found attempting to execute this step."
+    echo ""
+    echo "Try simply pressing reset on the ESP8266"
+    read -n 1  -p "Press a key to try again (or Ctrl-C to abort)..."
+    eval $1
+    EXIT_STAT=$?
+  done
+}
+
+
 
 #*******************************************************************************************************
 # ensure we are not running as root
@@ -101,13 +121,14 @@ fi
 ls /root > /dev/null 2>/dev/null
 EXIT_STAT=$?
 if [ $EXIT_STAT -ne 0 ];then
-  echo "Confirmed we are not running as root."
+  echo "Confirmed we are not running as root. (but there may be sudo prompts!"
 else
   echo "Aborted. Do not run with sudo (compile errors will occur)."
   exit 2
 fi
 
 
+echo ""
 #*******************************************************************************************************
 # now check if sudo is installed (some installs must run as root, but build must not)
 #*******************************************************************************************************
@@ -143,7 +164,7 @@ else
   echo "It appears sudo is installed and working properly."
 fi
 
-
+echo ""
 if ! [[ -a ~/workspace ]]; then
   echo "Creating directory ~/workspace"
   mkdir ~/workspace
@@ -209,20 +230,12 @@ fi
 #*******************************************************************************************************
 # use esptool.py to check connected device
 #*******************************************************************************************************
-echo ""
-echo "Checking connected device at $MYDEVICE at $MYBAUD baud with esptool..."
-~/workspace/esptool/esptool.py --port "$MYDEVICE" --baud "$MYBAUD" flash_id
-EXIT_STAT=$?
-if [ $EXIT_STAT -ne 0 ];then
-  DEVICEFOUND=0
+if [ "$DEVICEFOUND" == "1"]; then
   echo ""
-  echo "Error: a problem was found attempting to check device on port $MYDEVICE"
-  echo ""
-  echo "Try simply pressing reset on the ESP8266"
-  read -n 1  -p "Press a key to continue (or Ctrl-C to abort)..."
+  echo "Checking connected device at $MYDEVICE at $MYBAUD baud with esptool..."
+
+  execUntilSuccessful "~/workspace/esptool/esptool.py --port $MYDEVICE --baud $MYBAUD flash_id"
 fi
-
-
 
 #*******************************************************************************************************
 #*******************************************************************************************************
@@ -393,10 +406,14 @@ if [ "$1" == "MAKE-ONLY" ] || [ "$1" == "FULL" ]; then
   # TODO - determine if git fetched anything new, if not, no need to rebuild!
   # compile esp-open-sdk (this takes a ridiculously long time)
   make
+
+  echo ""
+  echo "make eps-open-sdk complete."
+  ~/workspace/esp-open-sdk/xtensa-lx106-elf/bin/xtensa-lx106-elf-cc --version
 fi
 
 
-# should evenually get a message like this at the end. (note important path note!):
+# should eventually get a message like this at the end. (note important path note!):
 #
 #   Xtensa toolchain is built, to use it:
 #
@@ -502,7 +519,7 @@ echo ""
 read -n 1  -p "Press a key to continue (or Ctrl-C to abort)..."
 
 #*******************************************************************************************************
-# check to see if a device is connected amd send the new firmware
+# check to see if a device is connected and send the new firmware
 #*******************************************************************************************************
 echo "Looking for $MYDEVICE ..."
 if [ -c "$MYDEVICE" ]; then
@@ -527,7 +544,7 @@ if [ -c "$MYDEVICE" ]; then
   echo "*************************************************************************************************"
   echo "*  Erasing..."
   echo "*************************************************************************************************"
-  ~/workspace/esptool/esptool.py --port "$MYDEVICE" erase_flash
+  execUntilSuccessful "~/workspace/esptool/esptool.py --port $MYDEVICE erase_flash"
 
   #*******************************************************************************************************
   # send newly compiled image to your ESP8266
@@ -535,8 +552,8 @@ if [ -c "$MYDEVICE" ]; then
   echo "*************************************************************************************************"
   echo "*  Writing image..."
   echo "*************************************************************************************************"
-  ~/workspace/esptool/esptool.py --port "$MYDEVICE" --baud "$MYBAUD" write_flash --flash_size=8m 0 \
-                                      ~/workspace/micropython/esp8266/build/firmware-combined.bin
+  execUntilSuccessful "~/workspace/esptool/esptool.py --port $MYDEVICE --baud $MYBAUD write_flash --flash_size=8m 0 \
+                                      ~/workspace/micropython/esp8266/build/firmware-combined.bin"
 else
   echo "Device $MYDEVICE not found. You will need to manually upload firmware."
   echo "See MYDEVICE setting in this script."
