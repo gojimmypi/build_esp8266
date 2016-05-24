@@ -230,7 +230,7 @@ fi
 #*******************************************************************************************************
 # use esptool.py to check connected device
 #*******************************************************************************************************
-if [ "$DEVICEFOUND" == "1"]; then
+if [ "$DEVICEFOUND" == "1" ]; then
   echo ""
   echo "Checking connected device at $MYDEVICE at $MYBAUD baud with esptool..."
 
@@ -639,11 +639,17 @@ cd ~/workspace
 echo "If the firmware uploaded correctly, now would be a good time to press reset on your ESP8266."
 echo "If hello world prints, then MicroPython is probably working!"
 read -n 1  -p "Press a key to continue..."
-echo ""
+echo "Attempting initial pyboard.py command...."
+
 python ~/workspace/micropython/tools/pyboard.py --device "$MYDEVICE" -c 'print("hello world")'
 echo ""
-
+echo "Hello World test complete!"
+echo
+echo "For reference, here is some local python info:"
 apt-cache policy python3 python
+
+echo ""
+echo "Here is the xtensa version info:"
 ~/workspace/esp-open-sdk/xtensa-lx106-elf/bin/xtensa-lx106-elf-cc --version
 
 # uncomment if you don't want to use minicom but need to open a terminal session to ESP8266
