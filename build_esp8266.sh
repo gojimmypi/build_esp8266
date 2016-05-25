@@ -313,6 +313,9 @@ if [ "$1" == "FULL" ]; then
   # to run the /micropython/tests/run-tests we need to have python serial support installed
   sudo apt-get install python3-serial --assume-yes
 
+  # install help2man
+  sudo apt-get install help2man
+
   # unrar install gave an error this error, so pulled out into separate install
   # even with the error, sees to work ok
   #
@@ -641,7 +644,7 @@ echo "If hello world prints, then MicroPython is probably working!"
 read -n 1  -p "Press a key to continue..."
 echo "Attempting initial pyboard.py command...."
 
-python ~/workspace/micropython/tools/pyboard.py --device "$MYDEVICE" -c 'print("hello world")'
+execUntilSuccessful "~/workspace/micropython/tools/pyboard.py --device $MYDEVICE -c 'print(\"hello world\")'"
 echo ""
 echo "Hello World test complete!"
 echo
