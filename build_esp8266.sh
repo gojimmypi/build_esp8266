@@ -316,6 +316,8 @@ if [ "$1" == "FULL" ]; then
   # install help2man
   sudo apt-get install help2man
 
+  sudo apt-get install python2.7-dev
+
   # unrar install gave an error this error, so pulled out into separate install
   # even with the error, sees to work ok
   #
