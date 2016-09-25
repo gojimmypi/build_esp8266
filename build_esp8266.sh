@@ -8,6 +8,7 @@
 #
 # NOTE: you will need a lot of free disk space. This will likely not work on an 8GB RPi SD.
 #
+# 25SEP16 - added make mpy-cross
 # 24MAY16 - implement execUntilSuccessful to allow repeat retries calling esptool.py
 # 15APR16 - ensure python3 serial is installed
 # 14APR16 - check device at startup using esptool.py --port /dev/ttyUSB0 flash_id
@@ -463,7 +464,8 @@ fi
 
 
 #*******************************************************************************************************
-# comppile mpy-cross
+# compile mpy-cross
+# see https://github.com/micropython/micropython/tree/master/esp8266
 #*******************************************************************************************************
 cd ~/workspace/micropython/
 make -C mpy-cross
