@@ -8,6 +8,7 @@
 #
 # NOTE: you will need a lot of free disk space. This will likely not work on an 8GB RPi SD.
 #
+# 23APR17 - removed --flash_size parameter from esptool.py (it now autodetects size)
 # 25SEP16 - added make mpy-cross
 # 24MAY16 - implement execUntilSuccessful to allow repeat retries calling esptool.py
 # 15APR16 - ensure python3 serial is installed
@@ -106,7 +107,11 @@ function execUntilSuccessful() {
     echo ""
     echo "Error: a problem was found attempting to execute this step."
     echo ""
-    echo "Try simply pressing reset on the ESP8266"
+    echo "Try simply pressing reset on the ESP8266. "
+    echo ""
+    echo "If reset does not work, put device into flash mode."
+    echo "(on some devices, simply hold flash button while powering up)"
+    echo ""
     read -n 1  -p "Press a key to try again (or Ctrl-C to abort)..."
     eval $1
     EXIT_STAT=$?
@@ -122,7 +127,7 @@ function execUntilSuccessful() {
 ls /root > /dev/null 2>/dev/null
 EXIT_STAT=$?
 if [ $EXIT_STAT -ne 0 ];then
-  echo "Confirmed we are not running as root. (but there may be sudo prompts!"
+  echo "Confirmed we are not running as root. (but there may be sudo prompts!)"
 else
   echo "Aborted. Do not run with sudo (compile errors will occur)."
   exit 2
@@ -562,11 +567,38 @@ if [ -c "$MYDEVICE" ]; then
 
   #*******************************************************************************************************
   # send newly compiled image to your ESP8266
+  #
+  # Note the --flash_size parameter units of bits (lower case m) such as 8m is deprecated in new esptool:
+  #
+  # WARNING: Flash size arguments in megabits like '8m' are deprecated.
+  # Please use the equivalent size '1MB'.
+  # Megabit arguments may be removed in a future release.
+  # esptool.py v2.0-beta2
+  # 
+  # Also, as of 2017 note that MicroPython seems to no longer fit into 1MB chips! This will be seen with
+  # errors like this at startup: (74880 baud)
+  #   #  ets Jan  8 2013,rst cause:2, boot mode:(3,7)
+  # 
+  # load 0x40100000, len 32096, room 16
+  # tail 0
+  # chksum 0x8d
+  # load 0x3ffe8000, len 1088, room 8
+  # tail 8
+  # chksum 0xfa
+  # load 0x3ffe8440, len 3000, room 0
+  # tail 8
+  # chksum 0x9f
+  # csum 0x9f
+  # #0 ets_task(40209c08, 31, 3ffe9010, 4)
+  # rf_cal[0] !=0x05,is 0xFF
+  # 
+  #
+  # even better: the most recent esptool auto-detects flash size! so the parameter has been removed.
   #*******************************************************************************************************
   echo "*************************************************************************************************"
   echo "*  Writing image..."
   echo "*************************************************************************************************"
-  execUntilSuccessful "~/workspace/esptool/esptool.py --port $MYDEVICE --baud $MYBAUD write_flash --flash_size=8m 0 \
+  execUntilSuccessful "~/workspace/esptool/esptool.py --port $MYDEVICE --baud $MYBAUD write_flash 0 \
                                       ~/workspace/micropython/esp8266/build/firmware-combined.bin"
 else
   echo "Device $MYDEVICE not found. You will need to manually upload firmware."
