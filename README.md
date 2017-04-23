@@ -38,13 +38,13 @@ Note the FULL option, of rebuilding EVERYTHING can take a quite long time on the
 
 #Examples:
 
-./build_esp8266.sh MAKE-ONLY-ESP8266
+```./build_esp8266.sh MAKE-ONLY-ESP8266```
 
-./build_esp8266.sh FLASH-ONLY
+```./build_esp8266.sh FLASH-ONLY```
 
 which really just does this:
 
- ~/workspace/esptool/esptool.py --port /dev/ttyUSB0 --baud 115200 write_flash  0 ~/workspace/micropython/esp8266/build/firmware-combined.bin
+``` ~/workspace/esptool/esptool.py --port /dev/ttyUSB0 --baud 115200 write_flash  0 ~/workspace/micropython/esp8266/build/firmware-combined.bin```
 
 
 ## Comments & feedback
