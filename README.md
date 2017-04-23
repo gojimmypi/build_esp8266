@@ -46,7 +46,7 @@ or
 
 which really just does this:
 
-``` ~/workspace/esptool/esptool.py --port /dev/ttyUSB0 --baud 115200 write_flash  0 \ 
+``` ~/workspace/esptool/esptool.py --port /dev/ttyUSB0 --baud 115200 write_flash  0 \\ 
                        ~/workspace/micropython/esp8266/build/firmware-combined.bin
 ```
 
