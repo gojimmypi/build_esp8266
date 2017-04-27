@@ -7,6 +7,11 @@ If you are not using a Raspberry Pi, then there are some things on Debian that a
 ## quick_start.sh 
 To get started quickly, here's a simple script to fetch the build script, flag it as executable, and run it:
 
+## doPathLink.sh
+Reminder to run with source to get current shell to see environment variable changes.
+
+source ./doPathLink.sh
+
 ## build_esp8266.sh  
 This is the main script to build MicroPython for the ESP8266
 
