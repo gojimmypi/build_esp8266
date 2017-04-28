@@ -7,11 +7,6 @@ If you are not using a Raspberry Pi, then there are some things on Debian that a
 ## quick_start.sh 
 To get started quickly, here's a simple script to fetch the build script, flag it as executable, and run it:
 
-## doPathLink.sh
-Reminder to run with source to get current shell to see environment variable changes.
-
-source ./doPathLink.sh
-
 ## build_esp8266.sh  
 This is the main script to build MicroPython for the ESP8266
 
@@ -43,16 +38,20 @@ Note the FULL option, of rebuilding EVERYTHING can take a quite long time on the
 
 #Examples:
 
-./build_esp8266.sh MAKE-ONLY-ESP8266
+```./build_esp8266.sh MAKE-ONLY-ESP8266```
 
-./build_esp8266.sh FLASH-ONLY
+or
+
+```./build_esp8266.sh FLASH-ONLY```
 
 which really just does this:
 
- ~/workspace/esptool/esptool.py --port /dev/ttyUSB0 --baud 115200 write_flash  0 ~/workspace/micropython/esp8266/build/firmware-combined.bin
+``` 
+~/workspace/esptool/esptool.py --port /dev/ttyUSB0 --baud 115200 write_flash  0  ~/workspace/micropython/esp8266/build/firmware-combined.bin
+```
 
 
-## Comments & feedback
+## Comments & Feedback
 You can leave messages on the MicroPython forum:
 
 http://forum.micropython.org/viewtopic.php?f=16&t=1720
@@ -109,4 +108,3 @@ esp-open-sdk is in its nature merely a makefile, and is in public domain. Howeve
 Quick summary: gcc is under GPL, which means that if you're distributing a toolchain binary you must be ready to provide complete toolchain sources on the first request.
 
 Since version 1.1.0, vendor SDK comes under modified MIT license. Newlib, used as C library comes with variety of BSD-like licenses. libgcc, compiler support library, comes with a linking exception. All the above means that for applications compiled with this toolchain, there are no specific requirements regarding source availability of the application or toolchain. (In other words, you can use it to build closed-source applications). (There're however standard attribution requirements - see licences for details).
-
