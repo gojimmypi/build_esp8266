@@ -13,26 +13,26 @@ To get started quickly, here's a simple script to fetch the build script, flag i
 This is the main script to build MicroPython for the ESP8266
 
 Usage:
-./build_esp8266.sh [OPTION]
+`./build_esp8266.sh [OPTION]`
 
 OPTIONS  (note the change to lower case, and addtion of --prefix since last release!)
 
-  --help
+  `--help`
     show this help. Source will be placed in ~/workspace/ directory.
 
-  --full
-     Update OS and installed apps, download latest esp-open-sdk and micropython, build everything, erase and upload new binary to /dev/ttyUSB0
+  `--full`
+     Update OS and installed apps, download latest esp-open-sdk and micropython, build everything, erase and upload new binary to `/dev/ttyUSB0` (or `/dev/ttyS0` for WSL)
 
-  --make-only
+  `--make-only`
      Download latest esp-open-sdk and micropython, build everything.
 
-  --MAKE-ONLY-ESP8266
+  `--MAKE-ONLY-ESP8266`
      Download latest micropython and build (skip esp-open-sdk).
 
-  --RUN-TESTS
+  `--RUN-TESTS`
      Run the esp8266 test script
 
-  --FLASH-ONLY
+  `--FLASH-ONLY`
      Only writing existing flash to device. (no updates, no build)
 
 
