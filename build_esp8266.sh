@@ -45,7 +45,7 @@
 #
 # Building the Firmware
 #
-# For the latest instructions on how to build and upload your existing firmware see micropython/esp8266.
+# For the latest instructions on how to build and upload your existing firmware see micropython/ports/esp8266.
 # The developers are working hard to get the existing alpha work merged into the main project. Do not
 # be surprised if you see people talking about features that seemingly do not exist in the current
 # repository, rest assured, they are on the way. The latest master branch changes fast, if you're
@@ -501,11 +501,9 @@ if [ "$1" == "--full" ] || [ "$1" == "--make-only" ] ||  [ "$1" == "--make-only-
   echo "*  Build ESP8266"
   echo "*************************************************************************************************"
   echo "*************************************************************************************************"
-  cd ~/workspace/micropython/esp8266
+  cd ~/workspace/micropython/ports/esp8266
 
   make clean
-
-  make axtls
 
   make
 fi
@@ -516,14 +514,14 @@ fi
 #*******************************************************************************************************
 echo "*************************************************************************************************"
 echo "*************************************************************************************************"
-echo "*  Newly built firmware in  ~/workspace/micropython/esp8266/build/"
+echo "*  Newly built firmware in  ~/workspace/micropython/ports/esp8266/build/"
 echo "*************************************************************************************************"
 echo "*************************************************************************************************"
 
-if  ([ -e  ~/workspace/micropython/esp8266/build/firmware-combined.bin ]); then
-  ls ~/workspace/micropython/esp8266/build/firmware* -al
+if  ([ -e  ~/workspace/micropython/ports/esp8266/build/firmware-combined.bin ]); then
+  ls ~/workspace/micropython/ports/esp8266/build/firmware* -al
 else
-  echo "ERROR: Fresh build file not found.  ~/workspace/micropython/esp8266/build/firmware-combined.bin"
+  echo "ERROR: Fresh build file not found.  ~/workspace/micropython/ports/esp8266/build/firmware-combined.bin"
   echo "Aborting..."
   exit 2
 fi
@@ -600,7 +598,7 @@ if [ -c "$MYDEVICE" ]; then
   echo "*  Writing image..."
   echo "*************************************************************************************************"
   execUntilSuccessful "~/workspace/esptool/esptool.py --port $MYDEVICE --baud $MYBAUD write_flash 0 \
-                                      ~/workspace/micropython/esp8266/build/firmware-combined.bin"
+                                      ~/workspace/micropython/ports/esp8266/build/firmware-combined.bin"
 else
   echo "Device $MYDEVICE not found. You will need to manually upload firmware."
   echo "See MYDEVICE setting in this script."
