@@ -58,40 +58,41 @@
 # this has caused problems for new users before. Please see "How to correctly power my module up?"
 # section of the "Technical FAQ".
 #
-MYDEVICE="/dev/ttyUSB0"
+# MYDEVICE="/dev/ttyUSB0" # regular linux devices
+MYDEVICE="/dev/ttyS3"
 MYBAUD="115200"  # could be as high as 460800
 DEVICEFOUND=0
 
 #*******************************************************************************************************
 # startup: show help as needed
 #*******************************************************************************************************
-if [ "$1" == "" ] ||  [ "$1" == "HELP" ]; then
+if [ "$1" == "" ] ||  [ "$1" == "--help" ]; then
   echo "Usage:"
   echo "build_esp8266 [OPTION]"
   echo ""
   echo "OPTIONS"
   echo ""
-  echo "  HELP"
+  echo "  --help"
   echo "    show this help. Source will be placed in ~/workspace/ directory."
   echo ""
-  echo "  FULL"
+  echo "  --full"
   echo "     Update OS and installed apps, download latest esp-open-sdk and micropython, build everything, erase and upload new binary to $MYDEVICE"
   echo ""
-  echo "  MAKE-ONLY"
+  echo "  --make-only"
   echo "     Download latest esp-open-sdk and micropython, build everything."
   echo ""
-  echo "  MAKE-ONLY-ESP8266"
+  echo "  --make-only-esp8266"
   echo "     Download latest micropython and build (skip esp-open-sdk)."
   echo ""
-  echo "  RUN-TESTS"
+  echo "  --run-tests"
   echo "     Run the esp8266 test script"
   echo ""
-  echo "  FLASH-ONLY"
+  echo "  --flash-only"
   echo "     Only writing existing flash to device. (no updates, no build)"
   exit 0
 fi
 
-if [ "$1" != "FULL" ] && [ "$1" != "MAKE-ONLY" ] &&  [ "$1" != "MAKE-ONLY-ESP8266" ] &&  [ "$1" != "FLASH-ONLY" ]  &&  [ "$1" != "RUN-TESTS" ]; then
+if [ "$1" != "--full" ] && [ "$1" != "--make-only" ] &&  [ "$1" != "--make-only-esp8266" ] &&  [ "$1" != "--flash-only" ]  &&  [ "$1" != "--run-tests" ]; then
   echo "$1  not a valid option. try ./build_esp8266.sh HELP "
   exit 0
 fi
@@ -252,7 +253,7 @@ fi
 #*******************************************************************************************************
 # check if we are doing a FULL update, inclusing OS updates
 #*******************************************************************************************************
-if [ "$1" == "FULL" ]; then
+if [ "$1" == "--full" ]; then
   echo "*************************************************************************************************"
   echo "*************************************************************************************************"
   if [[ -a /home/pi/ ]]; then
@@ -345,7 +346,7 @@ if ! [[ -a ~/workspace ]]; then
   mkdir ~/workspace
 fi
 
-if [ "$1" == "MAKE-ONLY" ] || [ "$1" == "FULL" ]; then
+if [ "$1" == "--make-only" ] || [ "$1" == "--full" ]; then
   #*******************************************************************************************************
   # check that gcc is installed before attempting to build
   #*******************************************************************************************************
@@ -443,7 +444,7 @@ fi
 #*******************************************************************************************************
 # next, fetch micropython source from github and build, as needed (skip if we are only writing firmware)
 #*******************************************************************************************************
-if [ "$1" == "FULL" ] || [ "$1" == "MAKE-ONLY" ] ||  [ "$1" == "MAKE-ONLY-ESP8266" ] || [ "$1" == "RUN-TESTS" ]; then
+if [ "$1" == "--full" ] || [ "$1" == "--make-only" ] ||  [ "$1" == "--make-only-esp8266" ] || [ "$1" == "--run-tests" ]; then
   cd ~/workspace
 
   if ! [[ -a ~/workspace/micropython ]]; then
@@ -478,7 +479,7 @@ make -C mpy-cross
 #*******************************************************************************************************
 # check if we are only running tests  (note we need to ensure we have the lasted MicroPython scripts!)
 #*******************************************************************************************************
-if [ "$1" == "RUN-TESTS" ]; then
+if [ "$1" == "--run-tests" ]; then
   echo "*************************************************************************************************"
   echo "*************************************************************************************************"
   echo "*  Running MicroPython tests... "
@@ -494,7 +495,7 @@ fi
 #*******************************************************************************************************
 # build the esp8266 MicroPython firmware
 #*******************************************************************************************************
-if [ "$1" == "FULL" ] || [ "$1" == "MAKE-ONLY" ] ||  [ "$1" == "MAKE-ONLY-ESP8266" ]; then
+if [ "$1" == "--full" ] || [ "$1" == "--make-only" ] ||  [ "$1" == "--make-only-esp8266" ]; then
   echo "*************************************************************************************************"
   echo "*************************************************************************************************"
   echo "*  Build ESP8266"

@@ -13,24 +13,24 @@ This is the main script to build MicroPython for the ESP8266
 Usage:
 ./build_esp8266.sh [OPTION]
 
-OPTIONS
+OPTIONS  (note the change to lower case, and addtion of --prefix since last release!)
 
-  HELP
+  --help
     show this help. Source will be placed in ~/workspace/ directory.
 
-  FULL
+  --full
      Update OS and installed apps, download latest esp-open-sdk and micropython, build everything, erase and upload new binary to /dev/ttyUSB0
 
-  MAKE-ONLY
+  --make-only
      Download latest esp-open-sdk and micropython, build everything.
 
-  MAKE-ONLY-ESP8266
+  --MAKE-ONLY-ESP8266
      Download latest micropython and build (skip esp-open-sdk).
 
-  RUN-TESTS
+  --RUN-TESTS
      Run the esp8266 test script
 
-  FLASH-ONLY
+  --FLASH-ONLY
      Only writing existing flash to device. (no updates, no build)
 
 
@@ -50,6 +50,18 @@ which really just does this:
 ~/workspace/esptool/esptool.py --port /dev/ttyUSB0 --baud 115200 write_flash  0  ~/workspace/micropython/esp8266/build/firmware-combined.bin
 ```
 
+## Known issues:
+Errors like this mean that the bash file was edited in Windows:
+
+```
+./build_esp8266.sh: line 65: $'\r': command not found
+```
+
+to fix:
+
+```
+dos2unix build_esp8266.sh
+```
 
 ## Comments & Feedback
 You can leave messages on the MicroPython forum:
