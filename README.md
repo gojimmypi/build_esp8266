@@ -26,13 +26,13 @@ OPTIONS  (note the change to lower case, and addtion of --prefix since last rele
   `--make-only`
      Download latest esp-open-sdk and micropython, build everything.
 
-  `--MAKE-ONLY-ESP8266`
+  `--make-only-esp8266`
      Download latest micropython and build (skip esp-open-sdk).
 
-  `--RUN-TESTS`
+  `--run-tests`
      Run the esp8266 test script
 
-  `--FLASH-ONLY`
+  `--flash-only`
      Only writing existing flash to device. (no updates, no build)
 
 
@@ -40,11 +40,11 @@ Note the FULL option, of rebuilding EVERYTHING can take a quite long time on the
 
 #Examples:
 
-```./build_esp8266.sh MAKE-ONLY-ESP8266```
+```./build_esp8266.sh --make-only-esp8266```
 
 or
 
-```./build_esp8266.sh FLASH-ONLY```
+```./build_esp8266.sh --flash-only```
 
 which really just does this:
 
