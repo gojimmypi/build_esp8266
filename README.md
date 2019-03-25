@@ -1,5 +1,5 @@
 # BUILD ESP8266
-This is the source code to build MicroPython for the ESP8266 on a Raspberry Pi (or debian).
+This is the source code to build MicroPython for the ESP8266 on a Raspberry Pi (or debian, or WSL Ubuntu).
 
 ## debian_specific.sh  
 If you are not using a Raspberry Pi, then there are some things on Debian that are not installed by default.
