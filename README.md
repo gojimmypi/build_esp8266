@@ -1,4 +1,4 @@
-Updste: March 24, 2019. Script now works with new "port" directory structure and confirmed to work in WSL.
+Update: March 24, 2019. Script now works with new "port" directory structure and confirmed to work in WSL.
 
 # BUILD ESP8266
 This is the source code to build MicroPython for the ESP8266 on a Raspberry Pi (or debian, or WSL Ubuntu).
